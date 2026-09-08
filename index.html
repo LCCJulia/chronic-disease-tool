@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>慢性病診斷與用藥分類工具</title>
+<style>
+  :root{
+    --navy:#23425f;
+    --navy2:#17344f;
+    --green:#16ad73;
+    --bg:#f6f3ef;
+    --card:#ffffff;
+    --text:#28323d;
+    --muted:#6b7680;
+    --line:#dbe2e8;
+    --yes-bg:#e8f7f1;
+    --yes-bd:#8ed9bd;
+    --no-bg:#f4f5f6;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 50px}
+  header{
+    background:linear-gradient(135deg,var(--navy2),var(--navy));
+    color:#fff;border-radius:18px;padding:28px 30px;margin-bottom:22px;
+    box-shadow:0 10px 30px rgba(27,53,76,.12);
+  }
+  header h1{margin:0 0 8px;font-size:clamp(26px,4vw,40px);line-height:1.15}
+  header p{margin:0;color:#d6e1ec;font-size:16px}
+  .notice{
+    margin-top:14px;background:rgba(255,255,255,.1);padding:10px 12px;border-radius:10px;
+    font-size:13px;color:#edf4fa
+  }
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:850px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:var(--card);border:1px solid #e6e9ec;border-radius:16px;padding:20px;
+    box-shadow:0 5px 18px rgba(26,45,64,.06)
+  }
+  .section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .badge{
+    display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;
+    border-radius:10px;background:var(--navy);color:#fff;font-weight:700
+  }
+  h2{font-size:21px;margin:0;color:var(--navy)}
+  label{display:block;font-weight:650;margin:14px 0 8px}
+  textarea{
+    width:100%;min-height:180px;resize:vertical;border:1px solid #cfd7de;border-radius:12px;
+    padding:13px 14px;font:inherit;line-height:1.55;background:#fff;color:var(--text);
+    outline:none;transition:.2s;
+  }
+  textarea:focus{border-color:#6a9fc1;box-shadow:0 0 0 3px rgba(61,126,169,.12)}
+  .hint{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.45}
+  .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  button{
+    border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer
+  }
+  .primary{background:var(--green);color:#fff}
+  .secondary{background:#edf1f4;color:var(--navy)}
+  .primary:hover{filter:brightness(.96)}
+  .secondary:hover{background:#e3e9ee}
+  .results{margin-top:18px}
+  .results h3{margin:0 0 10px;font-size:16px;color:var(--navy)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    border:1px solid var(--line);background:var(--no-bg);border-radius:999px;
+    padding:7px 10px;font-size:14px;display:inline-flex;gap:6px;align-items:center
+  }
+  .chip.yes{background:var(--yes-bg);border-color:var(--yes-bd);color:#116a4b;font-weight:700}
+  .chip.no{color:#7a848d}
+  .dot{width:8px;height:8px;border-radius:50%;background:#aab3bb}
+  .yes .dot{background:var(--green)}
+  .matchbox{
+    margin-top:12px;border-top:1px solid #edf0f2;padding-top:12px;font-size:13px;color:#4f5b65
+  }
+  .matchitem{margin:6px 0;padding:8px 10px;background:#f7f9fa;border-radius:8px}
+  details{
+    margin-top:18px;border:1px solid #e1e6ea;border-radius:12px;padding:12px 14px;background:#fbfcfc
+  }
+  summary{cursor:pointer;font-weight:700;color:var(--navy)}
+  .dict{margin-top:10px;font-size:13px;line-height:1.7;color:#45515b}
+  .footer{
+    margin-top:20px;font-size:12px;color:var(--muted);line-height:1.6;text-align:center
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>慢性病診斷與用藥分類工具</h1>
+    <p>貼上診斷與藥物清單，即時判斷指定疾病／生活習慣與藥物分類。</p>
+    <div class="notice">
+      本工具完全在瀏覽器本機執行，不需登入、不上傳資料、不使用 Cookie / localStorage，也不保存任何輸入內容。
+      僅供資料整理與研究輔助，不取代臨床診斷或處方判斷。
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <div class="section-title"><div class="badge">1</div><h2>診斷／病史判斷</h2></div>
+      <label for="dx">貼上診斷、病史或生活習慣文字</label>
+      <textarea id="dx" placeholder="例如：
+DM
+HT
+HL
+Heart disease
+Stroke
+HU
+Obesity
+Tobacco use
+Age 72"></textarea>
+      <div class="hint">
+        支援中文、英文與常用縮寫。DM、HT、HL、HU 採完整單字比對，避免誤判其他英文單字。
+        65歲以上可由「Age 72」、「72 years old」、「72歲」等格式判斷。
+      </div>
+      <div class="row">
+        <button class="primary" onclick="analyzeDx()">判斷診斷</button>
+        <button class="secondary" onclick="clearDx()">清除</button>
+      </div>
+      <div id="dxResult" class="results"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><div class="badge">2</div><h2>藥物分類判斷</h2></div>
+      <label for="meds">貼上所有藥物名稱</label>
+      <textarea id="meds" placeholder="例如：
+Glucophage 500 mg
+Jardiance Duo
+Micardis
+Ozempic
+Lantus"></textarea>
+      <div class="hint">
+        支援學名、常見商品名與複方。Dapagliflozin 複方會同時標示「Dapagliflozin」與「Dapagliflozin及其複方」。
+      </div>
+      <div class="row">
+        <button class="primary" onclick="analyzeMeds()">判斷藥物</button>
+        <button class="secondary" onclick="clearMeds()">清除</button>
+      </div>
+      <div id="medResult" class="results"></div>
+    </section>
+  </div>
+
+  <details>
+    <summary>目前內建診斷關鍵字</summary>
+    <div class="dict">
+      糖尿病：DM / diabetes / diabetes mellitus / 糖尿病<br>
+      高血壓：HT / hypertension / 高血壓<br>
+      高血脂：HL / hyperlipidemia / hyperlipidaemia / 高血脂 / 高脂血症<br>
+      心血管病史：heart disease / coronary heart disease / stroke / 心血管疾病 / 心血管病史<br>
+      高尿酸：HU / hyperuricemia / 高尿酸 / 高尿酸血症<br>
+      肥胖：obesity / obese / 肥胖<br>
+      抽菸：tabacco / tobacco / smoking / smoker / 抽菸 / 吸菸<br>
+      另外保留蛋白尿、家族腎臟病史、65歲以上長者與長期服用止痛之判斷。
+    </div>
+  </details>
+
+  <div class="footer">
+    若原始資料包含院內藥碼、中文藥名或特殊縮寫，可再於程式中的 keyword arrays 增加同義詞。
+  </div>
+</div>
+
+<script>
+function normalizeText(s){
+  return (s || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[，、；;|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeRegExp(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsPhrase(text, phrase){
+  return text.includes(phrase.toLowerCase());
+}
+
+/* 對短縮寫使用完整 token 比對，避免 DM 誤中其他單字 */
+function containsWholeToken(raw, token){
+  const escaped = escapeRegExp(token);
+  const re = new RegExp("(^|[^a-z0-9])" + escaped + "($|[^a-z0-9])", "i");
+  return re.test(raw.normalize("NFKC"));
+}
+
+const DX_RULES = [
+  {
+    label:"糖尿病",
+    phrases:["糖尿病","diabetes","diabetes mellitus"],
+    tokens:["DM"]
+  },
+  {
+    label:"高血壓",
+    phrases:["高血壓","hypertension"],
+    tokens:["HT"]
+  },
+  {
+    label:"高血脂",
+    phrases:["高血脂","高脂血症","hyperlipidemia","hyperlipidaemia"],
+    tokens:["HL"]
+  },
+  {
+    label:"蛋白尿",
+    phrases:["蛋白尿","proteinuria","albuminuria","microalbuminuria","macroalbuminuria"],
+    tokens:[]
+  },
+  {
+    label:"家族腎臟病史",
+    phrases:[
+      "家族腎臟病史",
+      "腎臟病家族史",
+      "family history of kidney disease",
+      "family history of renal disease",
+      "family history of ckd"
+    ],
+    tokens:[]
+  },
+  {
+    label:"心血管病史",
+    phrases:[
+      "心血管病史",
+      "心血管疾病",
+      "heart disease",
+      "coronary heart disease",
+      "stroke"
+    ],
+    tokens:[]
+  },
+  {
+    label:"高尿酸",
+    phrases:["高尿酸","高尿酸血症","hyperuricemia"],
+    tokens:["HU"]
+  },
+  {
+    label:"肥胖",
+    phrases:["肥胖","obesity","obese"],
+    tokens:[]
+  },
+  {
+    label:"抽菸",
+    phrases:[
+      "抽菸","吸菸","抽煙","吸煙",
+      "tabacco","tobacco","smoking","smoker"
+    ],
+    tokens:[]
+  },
+  {
+    label:"長期服用止痛",
+    phrases:[
+      "長期服用止痛",
+      "長期使用止痛",
+      "chronic analgesic",
+      "long-term analgesic",
+      "long term analgesic",
+      "chronic nsaid",
+      "long-term nsaid",
+      "long term nsaid",
+      "nsaid use",
+      "painkiller use"
+    ],
+    tokens:[]
+  }
+];
+
+function findDxMatches(raw, rule){
+  const text = normalizeText(raw);
+  const hits = [];
+
+  for(const p of rule.phrases){
+    if(containsPhrase(text, p)){
+      hits.push(p);
+    }
+  }
+  for(const tok of rule.tokens){
+    if(containsWholeToken(raw, tok)){
+      hits.push(tok);
+    }
+  }
+  return [...new Set(hits)];
+}
+
+function detectAge65(raw){
+  const text = normalizeText(raw);
+
+  const directPhrases = [
+    "65歲以上",
+    "年齡≥65",
+    "年齡 >=65",
+    "age ≥65",
+    "age >=65",
+    "aged 65 or older",
+    "age 65 or older",
+    "65 years or older"
+  ];
+  for(const p of directPhrases){
+    if(text.includes(p.toLowerCase())){
+      return {yes:true, match:p};
+    }
+  }
+
+  const patterns = [
+    /(?:age|aged)\s*[:：=]?\s*(\d{2,3})\b/gi,
+    /\b(\d{2,3})\s*(?:years?\s*old|yrs?\s*old|y\/o|yo)\b/gi,
+    /(?:年齡|年龄)\s*[:：=]?\s*(\d{2,3})/g,
+    /(\d{2,3})\s*歲/g
+  ];
+
+  for(const re of patterns){
+    let m;
+    while((m = re.exec(raw)) !== null){
+      const age = parseInt(m[1], 10);
+      if(age >= 65 && age < 120){
+        return {yes:true, match:m[0]};
+      }
+    }
+  }
+
+  return {yes:false, match:""};
+}
+
+function renderResults(el, labels, positives, details){
+  el.innerHTML = `
+    <h3>判斷結果</h3>
+    <div class="chips">
+      ${labels.map(label => `
+        <span class="chip ${positives.has(label) ? "yes" : "no"}">
+          <span class="dot"></span>
+          ${label}：${positives.has(label) ? "是" : "否"}
+        </span>
+      `).join("")}
+    </div>
+    ${details.length ? `
+      <div class="matchbox">
+        <b>偵測到的依據：</b>
+        ${details.map(x => `<div class="matchitem">${x}</div>`).join("")}
+      </div>
+    ` : ""}
+  `;
+}
+
+function analyzeDx(){
+  const raw = document.getElementById("dx").value;
+  const positives = new Set();
+  const details = [];
+
+  for(const rule of DX_RULES){
+    const hits = findDxMatches(raw, rule);
+    if(hits.length){
+      positives.add(rule.label);
+      details.push(`${rule.label}：${hits.slice(0,6).join("、")}`);
+    }
+  }
+
+  const age = detectAge65(raw);
+  if(age.yes){
+    positives.add("65歲以上長者");
+    details.push(`65歲以上長者：${age.match}`);
+  }
+
+  const labels = [
+    "糖尿病","高血壓","高血脂","蛋白尿","家族腎臟病史",
+    "65歲以上長者","心血管病史","高尿酸","肥胖","抽菸","長期服用止痛"
+  ];
+
+  renderResults(
+    document.getElementById("dxResult"),
+    labels,
+    positives,
+    details
+  );
+}
+
+const MED_RULES = [
+  ["Metformin", ["metformin","glucophage","glucoformin"]],
+  ["DPP4i", [
+    "linagliptin","trajenta","trajenta duo",
+    "sitagliptin","januvia","janumet",
+    "vildagliptin","galvus","eucres",
+    "alogliptin","saxagliptin","onglyza"
+  ]],
+  ["Empagliflozin", [
+    "empagliflozin","jardiance","jardiance duo","glyxambi","synjardy"
+  ]],
+  ["Jardiance Duo", [
+    "jardiance duo","empagliflozin + metformin",
+    "empagliflozin/metformin","synjardy"
+  ]],
+  ["Glyxambi", [
+    "glyxambi","empagliflozin + linagliptin",
+    "empagliflozin/linagliptin"
+  ]],
+  ["Dapagliflozin", [
+    "dapagliflozin","forxiga","farxiga","xigduo","qtern"
+  ]],
+  ["Dapagliflozin及其複方", [
+    "dapagliflozin","forxiga","farxiga","xigduo",
+    "dapagliflozin + metformin","dapagliflozin/metformin",
+    "qtern","dapagliflozin + saxagliptin","dapagliflozin/saxagliptin"
+  ]],
+  ["Canaglu", [
+    "canaglu","canagliflozin","invokana","vokanamet","invokamet"
+  ]],
+  ["Insulin", [
+    "insulin","novorapid","novolog","insulin aspart",
+    "lantus","insulin glargine","tresiba","insulin degludec",
+    "ryzodeg","humalog","insulin lispro","levemir","insulin detemir"
+  ]],
+  ["GLP1", [
+    "glp-1","glp1","semaglutide","ozempic","rybelsus","wegovy",
+    "dulaglutide","trulicity","liraglutide","victoza","saxenda",
+    "tirzepatide","mounjaro","zepbound","exenatide","byetta","bydureon"
+  ]],
+  ["Pentoxiphylline", [
+    "pentoxiphylline","pentoxifylline","trental"
+  ]],
+  ["ACEi", [
+    "enalapril","renitec","ramipril","tritace","captopril",
+    "lisinopril","perindopril","imidapril","benazepril",
+    "fosinopril","quinapril","ace inhibitor","acei"
+  ]],
+  ["ARB", [
+    "telmisartan","micardis","valsartan","diovan","irbesartan","aprovel",
+    "olmesartan","olmetec","candesartan","blopress","azilsartan","edarbi",
+    "co-diovan","exforge","twynsta","sevikar","losartan","cozaar",
+    "angiotensin ii receptor blocker","arb"
+  ]]
+];
+
+function analyzeMeds(){
+  const raw = document.getElementById("meds").value;
+  const text = normalizeText(raw);
+  const positives = new Set();
+  const details = [];
+
+  for(const [label, keys] of MED_RULES){
+    const hits = keys.filter(k => text.includes(k.toLowerCase()));
+    if(hits.length){
+      positives.add(label);
+      details.push(`${label}：${[...new Set(hits)].slice(0,6).join("、")}`);
+    }
+  }
+
+  const labels = [
+    "Metformin","DPP4i","Empagliflozin","Jardiance Duo","Glyxambi",
+    "Dapagliflozin","Dapagliflozin及其複方","Canaglu","Insulin",
+    "GLP1","Pentoxiphylline","ACEi","ARB"
+  ];
+
+  renderResults(
+    document.getElementById("medResult"),
+    labels,
+    positives,
+    details
+  );
+}
+
+function clearDx(){
+  document.getElementById("dx").value = "";
+  document.getElementById("dxResult").innerHTML = "";
+}
+
+function clearMeds(){
+  document.getElementById("meds").value = "";
+  document.getElementById("medResult").innerHTML = "";
+}
+</script>
+</body>
+</html>
